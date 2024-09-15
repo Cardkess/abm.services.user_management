@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import date
+from uuid import UUID
 
 class UserCreate(BaseModel):
     username: str
@@ -35,6 +36,7 @@ class UserUpdate(BaseModel):
     preferred_payment_method: Optional[str] = None
 
 class UserResponse(BaseModel):
+    id: UUID  
     username: str
     email: EmailStr
     first_name: str
