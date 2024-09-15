@@ -34,8 +34,22 @@ async def login(username: str, password: str):
 @router.post("/users", response_model=UserResponse)
 async def create_user(user: UserCreate):
     async with in_transaction():
+        
+        # Check if user with the same username or email already exists
+        existing_username = await User.filter(username=user.username).first()
+        
+        if existing_username:
+            raise HTTPException(status_code=400, detail="Username already registered")
+        
+        existing_email = await User.filter(email=user.email).first()
+        
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        
         # Convert the Pydantic model to a dictionary and exclude 'password'
         user_data = user.dict(exclude={"password"})
+        
         # Hash the password
         user_data["password"] = get_password_hash(user.password)
         
@@ -47,6 +61,5 @@ async def create_user(user: UserCreate):
 @router.get("/users")
 async def get_list_of_all_users():
     db = await get_database()
-    user = User(username="Cardkess", password="password", email="bchidambe@gmail.com")
-    await user.save()
+    
     pass

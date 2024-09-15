@@ -2,6 +2,8 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import date
 from uuid import UUID
+from tortoise.contrib.pydantic import pydantic_model_creator
+from app.models.user import User
 
 class UserCreate(BaseModel):
     username: str
@@ -35,21 +37,11 @@ class UserUpdate(BaseModel):
     date_of_birth: Optional[date] = None
     preferred_payment_method: Optional[str] = None
 
-class UserResponse(BaseModel):
-    id: UUID  
-    username: str
-    email: EmailStr
-    first_name: str
-    last_name: str
-    gender: Optional[str] = None
-    phone_number: Optional[str] = None
-    address: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    country: Optional[str] = None
-    postal_code: Optional[str] = None
-    date_of_birth: Optional[date] = None
-    preferred_payment_method: Optional[str] = None
+UserResponseBase = pydantic_model_creator(User, name="UserResponse", exclude=("password",))
 
+class UserResponse(UserResponseBase):
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class Config:
+    from_attributes = True
