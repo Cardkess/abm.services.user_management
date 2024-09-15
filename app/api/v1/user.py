@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 from app.models.user import User
 from app.core.config import settings
 from app.db import get_database
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.core.security import get_password_hash, verify_password, create_access_token
+from tortoise.transactions import in_transaction
 import bcrypt
 
 router = APIRouter()
@@ -28,11 +31,19 @@ async def login(username: str, password: str):
     # Implement login logic here
     pass
 
-@router.post("/users")
-async def create_user(username: str, password: str):
-    # Implement user creation logic here
-    pass
-
+@router.post("/users", response_model=UserResponse)
+async def create_user(user: UserCreate):
+    async with in_transaction():
+        # Convert the Pydantic model to a dictionary and exclude 'password'
+        user_data = user.dict(exclude={"password"})
+        # Hash the password
+        user_data["password"] = get_password_hash(user.password)
+        
+        # Create the user in the database
+        db_user = await User.create(**user_data)
+        
+    return await UserResponse.from_tortoise_orm(db_user)
+   
 @router.get("/users")
 async def get_list_of_all_users():
     db = await get_database()
